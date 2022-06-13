@@ -1,12 +1,12 @@
 from functools import wraps
-from typing import Type, Dict
+from typing import Dict
 
 from flask import Flask, render_template, request, redirect, url_for
 
 from game.container import Game
 from game.equipment import EquipmentData
 from game.hero import Player, Hero, Enemy
-from game.personages import personage_classes, Personage
+from game.personages import personage_classes
 from game.utils import load_equipment
 
 app = Flask(__name__)
@@ -87,6 +87,7 @@ def start_fight():
 @game_processing
 def hit():
     return render_template('fight.html', heroes=heroes, result=game.player_hit())
+
 
 @app.route("/fight/use-skill")
 @game_processing

@@ -1,7 +1,9 @@
+from functools import wraps
 from typing import Type, Dict
 
 from flask import Flask, render_template, request, redirect, url_for
 
+from game.container import Game
 from game.equipment import EquipmentData
 from game.hero import Player, Hero, Enemy
 from game.personages import personage_classes, Personage
@@ -14,12 +16,18 @@ heroes: Dict[str, Hero] = dict()
 
 EQUIPMENT: EquipmentData = load_equipment()
 
-# heroes = {
-#     "player": BaseUnit,
-#     "enemy": BaseUnit
-# }
+game = Game()
 
-# arena =  ... # TODO инициализируем класс арены
+
+def game_processing(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if game.game_processing:
+            return func(*args, **kwargs)
+        if game.game_results:
+            return render_template('fight.html', heroes=heroes, result=game.game_results)
+        return redirect(url_for('index'))
+    return wrapper
 
 
 def render_choose_hero_personage_template(*args, **kwargs) -> str:
@@ -48,8 +56,6 @@ def choose_hero():
         armor=EQUIPMENT.get_armor(request.form['armor']),
         name=request.form['name']
     )
-    # TODO на POST отправляем форму и делаем редирект на эндпоинт choose enemy
-    # TODO кнопка выбор героя. 2 метода GET и POST
     return redirect(url_for('choose_enemy'))
 
 
@@ -72,42 +78,32 @@ def choose_enemy():
 @app.route("/fight/")
 def start_fight():
     if 'player' in heroes and 'enemy' in heroes:
+        game.run(**heroes)
         return render_template('fight.html', heroes=heroes, result='Fight!')
     return redirect(url_for('index'))
-#
-# @app.route("/fight/hit")
-# def hit():
-#     # TODO кнопка нанесения удара
-#     # TODO обновляем экран боя (нанесение удара) (шаблон fight.html)
-#     # TODO если игра идет - вызываем метод player.hit() экземпляра класса арены
-#     # TODO если игра не идет - пропускаем срабатывание метода (простот рендерим шаблон с текущими данными)
-#     pass
-#
-#
-# @app.route("/fight/use-skill")
-# def use_skill():
-#     # TODO кнопка использования скилла
-#     # TODO логика пркатикчески идентична предыдущему эндпоинту
-#     pass
-#
-#
-# @app.route("/fight/pass-turn")
-# def pass_turn():
-#     # TODO кнопка пропус хода
-#     # TODO логика пркатикчески идентична предыдущему эндпоинту
-#     # TODO однако вызываем здесь функцию следующий ход (arena.next_turn())
-#     pass
-#
-#
-# @app.route("/fight/end-fight")
-# def end_fight():
-#     # TODO кнопка завершить игру - переход в главное меню
-#     return render_template("index.html", heroes=heroes)
-#
-#
 
-#
-#
+
+@app.route("/fight/hit")
+@game_processing
+def hit():
+    return render_template('fight.html', heroes=heroes, result=game.player_hit())
+
+@app.route("/fight/use-skill")
+@game_processing
+def use_skill():
+    return render_template('fight.html', heroes=heroes, result=game.player_use_skill())
+
+
+@app.route("/fight/pass-turn")
+@game_processing
+def pass_turn():
+    return render_template('fight.html', heroes=heroes, result=game.next_turn())
+
+
+@app.route("/fight/end-fight")
+def end_fight():
+    return redirect(url_for('index'))
+
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

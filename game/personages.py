@@ -14,7 +14,7 @@ class Personage(ABC):
     skill: Skill = NotImplemented
 
 
-class Warior(Personage):
+class Warrior(Personage):
     name = "Воин"
     max_health: float = 60.0
     max_stamina: float = 30.0
@@ -35,8 +35,6 @@ class Thief(Personage):
 
 
 personage_classes: Dict[str, Type[Personage]] = {
-    Warior.name: Warior,
+    Warrior.name: Warrior,
     Thief.name: Thief,
 }
-
-print(personage_classes)

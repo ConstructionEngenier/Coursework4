@@ -2,7 +2,6 @@ import json
 from typing import Union
 import os
 
-import marshmallow
 import marshmallow_dataclass
 
 from game.equipment import EquipmentData

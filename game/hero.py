@@ -29,7 +29,7 @@ class Hero(ABC):
 
     @property
     def stamina(self):
-        return round(self._hp, 1)
+        return round(self._stamina, 1)
 
     @stamina.setter
     def stamina(self, value):
